@@ -2,13 +2,13 @@
  * @Date: 2022-02-28 18:40:59
  * @Author: wang0122xl@163.com
  * @LastEditors: wang0122xl@163.com
- * @LastEditTime: 2022-03-08 09:47:24
+ * @LastEditTime: 2022-03-10 22:03:04
  * @Description: file content
  */
 import { MouseEvent, useEffect, useState } from 'react'
 import chooseOptions from './choose-options'
 import './pannel.less'
-import P5ToolsManager from 'p5tools'
+import P5ToolsManager from 'p5tools/src/manager'
 import P5 from 'p5'
 import emitter, { EMITTER_ANNOTATION_CROPPED, EMITTER_ANNOTATION_INFO_UPDATED } from 'p5tools/src/utils/emitter'
 import { P5ToolAnnotation, P5ToolBaseInfo } from 'p5tools/src/tools/baseTool'
@@ -49,7 +49,7 @@ const Pannel = (props: {
         setAnnotations(temp)
     }
     const getImages = () => {
-        const cropTool = props.manager?.findTool(P5ToolsManager.CropTool.toolName) as CropTool
+        const cropTool = props.manager?.findTool(P5ToolsManager.CropTool.toolName) as unknown as CropTool
         const temp = cropTool.images.sort(sortFunc)
         setImages([...temp])
     }
@@ -88,11 +88,13 @@ const Pannel = (props: {
     }
 
     const doCrop = () => {
-        props.sk?.cursor(props.sk.CROSS)
+        if (props.sk) {
+            props.sk?.cursor(props.sk?.CROSS)
 
-        props.manager!.setToolEnabled(P5ToolsManager.CropTool.toolName, {
-            strokeColor: 'blue'
-        })
+            props.manager!.setToolEnabled(P5ToolsManager.CropTool.toolName, {
+                strokeColor: 'blue'
+            })
+        }
     }
 
     const doEdit = async (anno: P5ToolAnnotation) => {
@@ -112,7 +114,7 @@ const Pannel = (props: {
         info: P5ToolBaseInfo,
         url: string
     }) => {
-        const cropTool = props.manager!.findTool(P5ToolsManager.CropTool.toolName) as CropTool
+        const cropTool = props.manager!.findTool(P5ToolsManager.CropTool.toolName) as unknown as CropTool
         const index = cropTool.images.indexOf(img)
         cropTool.images.splice(index, 1)
         getImages()

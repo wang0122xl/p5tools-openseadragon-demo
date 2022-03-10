@@ -2,7 +2,7 @@
  * @Date: 2022-03-08 09:24:16
  * @Author: wang0122xl@163.com
  * @LastEditors: wang0122xl@163.com
- * @LastEditTime: 2022-03-08 13:35:45
+ * @LastEditTime: 2022-03-10 22:03:01
  * @Description: file content
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -10,9 +10,10 @@ import OpenSeadragon, { Point, TileSource } from 'openseadragon'
 import './App.css'
 import { createPortal } from 'react-dom'
 import Pannel from './components/pannel'
-import P5ToolsManager from 'p5tools'
+import P5ToolsManager from 'p5tools/src/manager'
 import P5 from 'p5'
-
+import CropTool from 'p5tools/src/tools/cropTool'
+import { promisifyToBlob } from 'p5tools/src/utils'
 
 
 function App() {
@@ -20,6 +21,11 @@ function App() {
 
     const [initialScale, setInitialScale] = useState<number>()
     const [initialTranslate, setInitialTranslate] = useState<Point>()
+    const [cropPosition, setCropPosition] = useState<{
+        visible: boolean
+        x?: number
+        y?: number
+    }>()
 
     const [pannelVisible, setPannelVisible] = useState(true)
     const [viewer, setViewer] = useState<OpenSeadragon.Viewer>()
@@ -32,6 +38,28 @@ function App() {
         const arrowLineTool = new P5ToolsManager.ArrowLineTool()
         const cropTool = new P5ToolsManager.CropTool()
         const manager = new P5ToolsManager()
+
+        textTool.getToolInfo = () => Promise.resolve({
+            time: new Date().getTime(),
+            title: prompt('请输入')!
+        })
+        arrowLineTool.getToolInfo = () => Promise.resolve({
+            time: new Date().getTime(),
+            title: prompt('请输入')!
+        })
+
+        cropTool.startRect = () => {
+            setCropPosition({
+                visible: false
+            })
+        }
+        cropTool.endRect = ({ startX, startY }) => {
+            setCropPosition({
+                visible: true,
+                x: startX,
+                y: startY
+            })
+        }
         manager
             .useTool(textTool)
             .useTool(circleTool)
@@ -39,7 +67,7 @@ function App() {
             .useTool(lineTool)
             .useTool(freehandTool)
             .useTool(arrowLineTool)
-            .useTool(cropTool)
+            .useTool(cropTool as any)
         return manager
     })
     const [sk, setSK] = useState<P5>()
@@ -82,7 +110,7 @@ function App() {
     }
 
     const initP5 = useCallback(() => {
-        if (!viewer || !toolsManager) {
+        if (!viewer || !toolsManager || sk) {
             return
         }
         viewer!.addHandler('open', openViewer)
@@ -130,7 +158,10 @@ function App() {
             toolsManager.draw(sk, scale / initialScale!, translate!.x, translate!.y )
         }
         sk.touchStarted = (event: any) => {
-            if (event.target.nodeName === 'CANVAS' && !viewer?.isMouseNavEnabled()) {
+            if (
+                event.target.nodeName === 'CANVAS' &&
+                !viewer?.isMouseNavEnabled()
+            ) {
                 toolsManager.touchStarted(sk!)
             }
         }
@@ -138,7 +169,11 @@ function App() {
             toolsManager.touchMoved(sk)
         }
         sk.touchEnded = (event: any) => {
-            if (event.target.nodeName === 'CANVAS' && !viewer?.isMouseNavEnabled()) {
+            if (
+                event.target.nodeName === 'CANVAS' &&
+                !viewer?.isMouseNavEnabled() &&
+                toolsManager.enabledTool?.name !== P5ToolsManager.CropTool.toolName
+            ) {
                 toolsManager.touchEnded(sk)
                 toolsManager.quitTool()
             }
@@ -173,7 +208,6 @@ function App() {
         const translate = getTranslate()
         const scale = getScale()
 
-        console.log(scale, translate)
         setInitialScale(scale)
         setInitialTranslate(translate)
     }
@@ -181,12 +215,46 @@ function App() {
         sk?.redraw()
     }
 
+    const crop = async () => {
+        setCropPosition({
+            visible: false
+        })
+        
+        const tool = toolsManager.enabledTool as unknown as CropTool;
+        const blob = await promisifyToBlob(viewer?.drawer.canvas as HTMLCanvasElement)
+        sk?.loadImage(URL.createObjectURL(blob!), img => {
+            tool.doCrop(sk!, () => {
+                return Promise.resolve(sk!.image(img, 0, 0, sk.width, sk.height))
+            })
+        })
+    }
+
     return (
         <div>
             <div className="h-100vh w-full z-1" ref={domEl} />
             {
                 pannelVisible && createPortal(
-                    <Pannel manager={toolsManager} sk={sk} />,
+                    <>
+                        <Pannel manager={toolsManager} sk={sk} />
+                        {
+                            !!cropPosition?.visible && (
+                                <div className='fixed flex items-center z-1' style={{
+                                    top: cropPosition!.y! - 35,
+                                    left: cropPosition?.x
+                                }}>
+                                    <button className='bg-white' onClick={crop}>确定</button>
+                                    <button className='bg-white ml-10px' onClick={() => {
+                                        sk?.cursor(sk.ARROW)
+                                        setCropPosition({
+                                            visible: false
+                                        });
+                                        (toolsManager.enabledTool as any).endCrop()
+                                        toolsManager.quitTool()
+                                    }}>取消</button>
+                                </div>
+                            )
+                        }
+                    </>,
                     document.body
                 )
             }
