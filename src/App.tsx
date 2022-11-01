@@ -2,7 +2,7 @@
  * @Date: 2022-03-08 09:24:16
  * @Author: wang0122xl@163.com
  * @LastEditors: wang0122xl@163.com
- * @LastEditTime: 2022-03-10 22:03:01
+ * @LastEditTime: 2022-11-01 12:02:24
  * @Description: file content
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -113,7 +113,8 @@ function App() {
         if (!viewer || !toolsManager || sk) {
             return
         }
-        viewer!.addHandler('open', openViewer)
+        // viewer!.addHandler('open', openViewer)
+        openViewer()
 
         toolsManager.hasEnabledToolCallback = has => {
             if (has) {
@@ -189,7 +190,7 @@ function App() {
         return () => {
             viewer.destroy()
         }
-    }, [])
+    }, [domEl])
 
     useEffect(() => {
         initP5()

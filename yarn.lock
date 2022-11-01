@@ -892,10 +892,10 @@ p5@^1.4.1:
   resolved "https://registry.yarnpkg.com/p5/-/p5-1.4.1.tgz#979739a576eb566225642b5d25cf7bb8945b70dd"
   integrity sha512-3/X+qb0bK2Cg8nuZNpZZvzxkeUSRghOf0S+l8c+U8yIkUTVSbbcV0R8y96rx3InVBVhk8cH9kFC93VlZZElqSw==
 
-p5tools@^1.0.7:
-  version "1.0.7"
-  resolved "https://registry.yarnpkg.com/p5tools/-/p5tools-1.0.7.tgz#1d8b5806c95e0c5058370b5c85f4297ac25ab709"
-  integrity sha512-2FLrL9VoIvK8NHExHEYCaOSfxYUDK37AkiKqraD0eUuh63QP88b1MEU1+S4+dWG2VTyhKV6Cs11ZuWXb3mfUWA==
+p5tools@^1.0.11:
+  version "1.0.11"
+  resolved "https://registry.yarnpkg.com/p5tools/-/p5tools-1.0.11.tgz#04b8cdcbf05c38b4c85f47661fb77f04aea04e9b"
+  integrity sha512-KfHhNAPN83NXPETsrKlArVyhf7WHsnfc/fPOQyXUeV+a827YyDMzZuv8jtgbVnvYe09CTWDSH8fy9n8eBd5sMA==
   dependencies:
     events "^3.3.0"
 
